@@ -1,0 +1,16 @@
+{
+  "stage": 0,
+  "loose": "all",
+  "optional": [
+    "bluebirdCoroutines",
+    "runtime"
+  ],
+  "blacklist": [
+    "regenerator"
+  ],
+  "highlightCode": true,
+  "env": {
+    "development": {
+    }
+  }
+}

@@ -4,6 +4,7 @@
 *.log
 *.sublime-project
 *.sublime-workspace
-test
+test/150908-native-v6
 node_modules
 dump.rdb
+.idea

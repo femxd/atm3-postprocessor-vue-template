@@ -1,6 +1,6 @@
 {
   "name": "atm3-postprocessor-vue-template",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "description": "A Node.js blog using react+redux+react-router",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "test": "mocha test/run.js",
     "server-start": "NODE_ENV=production node ./server/bin/www",
     "server-start-win": "set NODE_ENV=production && node ./server/bin/www",
-    "server-watch": "node_modules/.bin/nodemon -w ./server ./server/bin/www.js",
+    "server-watch": "nodemon -w ./server ./server/bin/www.js",
     "client-watch": "node ./webpack/hot.js",
     "client-build": "NODE_ENV=production node_modules/.bin/webpack -p --config ./webpack/webpack.prod.config",
     "client-build-win": "set NODE_ENV=production && node ./node_modules/webpack/bin/webpack.js -p --config ./webpack/webpack.prod.config"
@@ -22,5 +22,11 @@
     "babel-loader": "^5.3.2",
     "babel-preset-es2015": "^6.1.18",
     "babel-runtime": "^6.2.0"
-  }
+  },
+  "readme": "# atm3-postprocessor-vue-template\r\natm3 plugin to parser vue template \r\n",
+  "readmeFilename": "README.md",
+  "gitHead": "8df6f1f01c1e192c55a793f5746d3361b038e447",
+  "_id": "atm3-postprocessor-vue-template@0.0.1",
+  "_shasum": "460bfe46bb7d67c0c7b46a0538fae71e01ffcbe5",
+  "_from": "atm3-postprocessor-vue-template@*"
 }

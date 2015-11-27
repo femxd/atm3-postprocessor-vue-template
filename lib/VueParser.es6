@@ -44,11 +44,7 @@ function VueParser(options = {modBaseDir: ""}) {
   }
 
   function replaceVueComp($comp, modName, $mod) {
-    if ($comp.children().length === 0) {
-      $mod("content").replaceWith($mod("content").html());
-    } else {
-      $mod("content").replaceWith($comp.html());
-    }
+    replaceContentElem($comp, $mod);
     var _class = $comp.attr('class');
     if (!!_class) {
       var $root = $mod.root().children().first(),
@@ -63,15 +59,51 @@ function VueParser(options = {modBaseDir: ""}) {
     $comp.replaceWith($mod.html());
   }
 
+  function replaceContentElem($comp, $mod) {
+    let contents = $mod("content");
+    let contentArr = [];
+    for (let i = 0; i < contents.length; i++) {
+      contentArr.push($mod(contents[i]));
+    }
+    contentArr.sort(function (a, b) {
+      if (!!a.attr('select')) {
+        return -1;
+      } else if (!!b.attr('select')) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+    let waitRemoves = [];
+    contentArr.map(($content) => {
+      if (!!$content.attr('select')) {
+        let selector = $content.attr("select");
+        let $first = $comp.children(selector).first();
+        log.allan("content selector: ", selector);
+        if (!!$first) {
+          log.allan("select hint: ", $first.attr('class'));
+          $content.replaceWith($first.clone());
+          waitRemoves.indexOf($first) === -1 && waitRemoves.push($first);
+        } else {
+          log.allan("select miss!");
+          $content.remove();
+        }
+      } else {
+        waitRemoves.map($item => $item.remove());
+        waitRemoves.length = 0;
+        $mod("content").replaceWith($comp.children().length ? $comp.html() : $mod("content").html());
+      }
+    });
+  }
+
   function handleRepeatDirectiveForComp($comp, $mod) {
     let _repeat = $comp.attr('repeat');
     if (!!_repeat) {
       $mod('[v-repeat]').map((__, elem) => {
         let $elem = $mod(elem);
         if (/repeat\s*||\s*\d+/.test($elem.attr('v-repeat'))) {
-          log.allan("elem: ", $elem.html());
+          $elem.attr('v-repeat', _repeat);
         }
-        $elem.attr('v-repeat', _repeat);
       });
     }
   }
@@ -87,8 +119,7 @@ function VueParser(options = {modBaseDir: ""}) {
     }
   }
 
-  function calcRepeatTimes($comp) {
-    var _repeatAttr = $comp.attr("repeat") || $comp.attr("v-repeat");
+  function calcRepeatTimes(_repeatAttr) {
     if (!!_repeatAttr) {
       var repeatTimes = parseInt(_repeatAttr);
       if (isNaN(repeatTimes)) {
@@ -110,12 +141,35 @@ function VueParser(options = {modBaseDir: ""}) {
 
     $("[v-repeat], [repeat]").map((__, item) => {
       let $item = $(item);
-      let repeatTimes = calcRepeatTimes($item);
-      $item.removeAttr('v-repeat');
-      $item.removeAttr('repeat');
-      for (let i = 0; i < repeatTimes; i++) {
-        $item.clone().insertAfter($item);
+      let repeatStr = $item.attr("repeat") || $item.attr("v-repeat");
+      let repeatTimes = calcRepeatTimes(repeatStr);
+      if (!!repeatTimes) {
+        $item.removeAttr('v-repeat');
+        $item.removeAttr('repeat');
+        for (let i = 0; i < repeatTimes; i++) {
+          $item.clone().insertAfter($item);
+        }
+      } else {
+        try {
+          repeatStr = repeatStr.replace(/'/ig, '"');
+          let repeatArr = JSON.parse(repeatStr);
+          $item.removeAttr('v-repeat');
+          $item.removeAttr('repeat');
+
+          if (repeatArr && repeatArr.length) {
+            repeatArr.map((attr) => {
+              let $clone = $item.clone();
+              $clone.children('[v-text]').text(attr).removeAttr('v-text');
+              $clone.insertAfter($item);
+            });
+            $item.remove();
+          }
+        } catch (e) {
+          log.error("parse v-repeat attr error: ", e.stack, " \n\r from: ", $item.html());
+        }
       }
+
+
     });
     return $.html();
   }

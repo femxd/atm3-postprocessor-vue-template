@@ -4,6 +4,6 @@
 *.log
 *.sublime-project
 *.sublime-workspace
-
+test
 node_modules
 dump.rdb

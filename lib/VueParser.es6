@@ -2,12 +2,15 @@ import log from './log'
 import _ from './util'
 import cheerio from 'cheerio'
 
+log.level = log.L_DEBUG;
+const SCRIPT_REG = /(<script.*(myapp|qqbrowser)\/\2\.js.*<\/script>)/ig;
+
 function VueParser(options = {modBaseDir: ""}) {
   var modBaseDir = options.modBaseDir;
 
   function readAllModFiles() {
-    var files = _.find(modBaseDir, "mod-*/index.html", "publish/**");
-    log.allan("files: ", files, ", \n\r total: ", files.length);
+    var files = _.find(modBaseDir, "{mod,css}-*/index.html", "publish/**");
+    log.debug("files: ", files, ", \n\r total: ", files.length);
 
     var _modCaches = {};
     files.forEach((file) => {
@@ -22,11 +25,12 @@ function VueParser(options = {modBaseDir: ""}) {
   }
 
   function handleModFile($comp, modCache) {
+    log.debug("modCache html: ", modCache.html);
     var $ = cheerio.load(modCache.html, {
       decodeEntities: false
     });
     var comps = $("component");
-    log.allan("[2] %s mod file has %d sub mods!", modCache.modName, comps.length);
+    log.debug("[2] %s mod file has %d sub mods!", modCache.modName, comps.length);
     for (let i = comps.length - 1; i >= 0; i--) {
       var _$comp = $(comps[i]);
       var modName = _.trim(_$comp.attr("is") || ''),
@@ -35,12 +39,12 @@ function VueParser(options = {modBaseDir: ""}) {
       if (!modName || modLoadConf === '!html') {
         _$comp.remove();
       } else {
-        log.allan("[2] handle inner mod: ", modCache.modName);
+        log.debug("[2] handle inner mod: ", modCache.modName);
         handleModFile(_$comp, modCaches[modName]);
       }
     }
     replaceVueComp($comp, modCache.modName, $);
-    log.allan("[2] ", modCache.modName, " => html done!");
+    log.debug("[2] ", modCache.modName, " => html done!");
   }
 
   function replaceVueComp($comp, modName, $mod) {
@@ -79,13 +83,13 @@ function VueParser(options = {modBaseDir: ""}) {
       if (!!$content.attr('select')) {
         let selector = $content.attr("select");
         let $first = $comp.children(selector).first();
-        log.allan("content selector: ", selector);
+        log.debug("content selector: ", selector);
         if (!!$first) {
-          log.allan("select hint: ", $first.attr('class'));
+          log.debug("select hint: ", $first.attr('class'));
           $content.replaceWith($first.clone());
           waitRemoves.indexOf($first) === -1 && waitRemoves.push($first);
         } else {
-          log.allan("select miss!");
+          log.debug("select miss!");
           $content.remove();
         }
       } else {
@@ -185,12 +189,12 @@ function VueParser(options = {modBaseDir: ""}) {
 
   return {
     parse: function handleEntryHtml(srcHtml) {
-      log.allan("[1] start handle entry html");
+      log.debug("[1] start handle entry html ");
       var $ = cheerio.load(srcHtml, {
         decodeEntities: false
       });
       var comps = $('component');
-      log.allan("[1] entry file has %s mod!", comps.length);
+      log.debug("[1] entry file has %s mod!", comps.length);
 
       for (let i = comps.length - 1; i >= 0; i--) {
         var $comp = $(comps[i]);
@@ -199,17 +203,24 @@ function VueParser(options = {modBaseDir: ""}) {
         if (!modName || modLoadConf === '!html') {
           $comp.remove();
         } else {
-          log.allan("[1] start handle mod: ", modName);
-          log.allan("[1] entry %s has  %d child mod", modName, $comp.children('component').length);
-          handleModFile($comp, modCaches[modName]);
+          log.debug("[1] start handle mod: ", modName);
+          log.debug("[1] entry %s has  %d child mod", modName, $comp.children('component').length);
+          let modCache = modCaches[modName];
+          if (!modCache) {
+            return log.error("componenet %s not exists! please update guide project!", modName);
+          }
+          handleModFile($comp, modCache);
         }
       }
 
-      log.allan("[1] success handled entry");
+      log.debug("[1] success handled entry");
       var raw = $.html();
-      return handleRepeatDirective(raw);
+      return handleRepeatDirective(raw.replace(SCRIPT_REG, ""));
     }
   }
 }
+
+VueParser.util = util;
+VueParser.log = log;
 
 export default VueParser

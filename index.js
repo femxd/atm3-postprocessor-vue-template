@@ -10,7 +10,7 @@ module.exports = function (ret, conf, settings, opt) {
     modBaseDir: modBaseDir
   });
   fis.util.map(ret.src, function (subpath, file) {
-    if (file.isHtmlLike) {
+    if (file.isHtmlLike && !!file.release) {
       var destHtml = vueParser.parse(file.getContent());
       file.setContent(destHtml);
     }

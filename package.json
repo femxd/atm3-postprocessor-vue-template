@@ -1,11 +1,13 @@
 {
-  "name": "atm3-postprocessor-vue-template",
-  "version": "0.0.2",
+  "name": "atm3-postpackager-vue-template",
+  "version": "0.0.5",
   "private": false,
   "description": "A Node.js blog using react+redux+react-router",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/run.js",
+    "babel": "babel --presets es2015  lib/*.es6 -d ./",
+    "babel-watch": "babel  --watch --presets es2015  lib/*.es6 -d ./",
     "server-start": "NODE_ENV=production node ./server/bin/www",
     "server-start-win": "set NODE_ENV=production && node ./server/bin/www",
     "server-watch": "nodemon -w ./server ./server/bin/www.js",
@@ -14,7 +16,9 @@
     "client-build-win": "set NODE_ENV=production && node ./node_modules/webpack/bin/webpack.js -p --config ./webpack/webpack.prod.config"
   },
   "dependencies": {
-    "cheerio": "^0.19.0"
+    "cheerio": "^0.19.0",
+    "minimatch": "2.0.4",
+    "lodash": "3.6.0"
   },
   "devDependencies": {
     "babel-core": "^5.8.25",
